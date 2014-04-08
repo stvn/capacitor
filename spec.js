@@ -32,7 +32,10 @@ describe('FSM', function() {
     if (!options || !options.skipDefine) {
       fsm.define(state);
     }
-    promise = fsm.initialize(state.name);
+    promise = fsm.initialize(state.name)
+    .then(function() {
+      fsmEvents.didTransition.reset();
+    })
     state._enter.resolve();
     return promise;
   }
@@ -261,8 +264,9 @@ describe('FSM', function() {
       assert.ok(fsm.isTransitioning(), 'should be transitioning until promise returns');
 
       res.then(function(value) {
-        assert.equal(value, true, 'should return the value of enter() function')
         assert.notOk(fsm.isTransitioning(), 'should be transitioning until promise returns');
+        assert.ok(fsmEvents.didTransition.called, 'should call fsm#didTransition');
+        assert.ok(fsmEvents.didTransition.calledWith(state), 'call fsm#didTransition w correct args');
       })
       .then(done).catch(done)
     })
@@ -274,8 +278,9 @@ describe('FSM', function() {
       assert.ok(fsm.isTransitioning(), 'should be transitioning until promise returns');
 
       res.then(function(value) {
-        assert.equal(value, true, 'should return the value of enter() function');
         assert.notOk(fsm.isTransitioning(), 'should be transitioning until promise returns');
+        assert.ok(fsmEvents.didTransition.called, 'should call fsm#didTransition');
+        assert.ok(fsmEvents.didTransition.calledWith(state), 'call fsm#didTransition w correct args');
       })
       .then(done).catch(done)
 

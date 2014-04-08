@@ -184,6 +184,9 @@ FSM.prototype.initialize = function(stateName) {
     resolve(Promise.cast(this.current.enter()));
   }.bind(this))
   .bind(this)
+  .then(function() {
+    this.events.didTransition(this.current);
+  })
   .finally(function() {
     this.transitionPromise = null;
   })

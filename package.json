@@ -4,7 +4,8 @@
   "description": "Promise-based asynchronous Finite State Machine for node/browserify ",
   "main": "fsm.js",
   "scripts": {
-    "test": "mocha --reporter spec spec.js"
+    "test": "mocha --reporter spec spec.js",
+    "start": "mocha --reporeter min --watch spec.js"
   },
   "repository": {
     "type": "git",
