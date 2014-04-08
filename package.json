@@ -1,6 +1,6 @@
 {
   "name": "fsmp",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Promise-based asynchronous Finite State Machine for node/browserify ",
   "main": "fsm.js",
   "scripts": {
