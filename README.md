@@ -69,7 +69,7 @@ Event handlers can return a falsy value to do nothing (eg side-effects only). If
     // => now in the 'ping' state
     fsm.emit('pong') // does nothing: 'ping' state has no 'pong' event
     
-## Asyncrhonous Example
+## Asynchronous Example
 
 Event handler functions can return a promise which resolves to a state name: in this case the FSM will be in a transitioning state until the current event completes. Subsequent events during processing will cause the state's `onConflict` handler to be called.
 
