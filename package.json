@@ -1,0 +1,39 @@
+{
+  "name": "fsmp",
+  "version": "0.0.0",
+  "description": "Promise-based asynchronous Finite State Machine for node/browserify ",
+  "main": "fsm.js",
+  "scripts": {
+    "test": "mocha --reporter spec spec.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/josephsavona/fsmp.git"
+  },
+  "keywords": [
+    "state",
+    "machine",
+    "fsm",
+    "finite",
+    "state",
+    "machine",
+    "state",
+    "node",
+    "browserify"
+  ],
+  "author": "Joseph Savona <joe@josephsavona.com>",
+  "license": "MIT License",
+  "bugs": {
+    "url": "https://github.com/josephsavona/fsmp/issues"
+  },
+  "homepage": "https://github.com/josephsavona/fsmp",
+  "devDependencies": {
+    "chai": "^1.9.1",
+    "sinon": "^1.9.1",
+    "mocha": "^1.18.2"
+  },
+  "dependencies": {
+    "bluebird": "^1.2.1",
+    "lodash": "^2.4.1"
+  }
+}
