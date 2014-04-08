@@ -7,6 +7,13 @@ Promise-based asynchronous Finite State Machine for node/browserify
 TODO: not yet published to npm.
 
     # npm install fsmp
+    
+## Development Guide
+
+    # install dependencies
+    npm install
+    # run unit tests
+    npm test
 
 ## Usage
 
