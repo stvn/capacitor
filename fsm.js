@@ -25,6 +25,12 @@ var FSM = function(events, stateDefault) {
     onMissing: nop,
     onConflict: nop
   });
+
+  // bind locally
+  this.emit = this.emit.bind(this);
+  this.define = this.define.bind(this);
+  this.isTransitioning = this.isTransitioning.bind(this);
+  this.initialize = this.initialize.bind(this);
 };
 
 /*
@@ -100,10 +106,14 @@ FSM.prototype.emit = function(eventName, params) {
  
   // handle the event 
   this.transitionPromise = new Promise(function(resolve) {
+    this.events.willEmit(eventName, params);
     resolve(this.current[eventName].call(this.current, params));
   }.bind(this))
   .bind(this)
   .then(function(stateName) {
+    // callback that event occurred
+    this.events.didEmit(eventName, params);
+
     // do nothing unless event handler returns a state name
     if (!stateName || stateName === this.current.name) {
       return false;
@@ -131,7 +141,6 @@ FSM.prototype.emit = function(eventName, params) {
     if (didTransition) {
       this.events.didTransition(this.current);
     }
-    this.events.didEvent(eventName, params, didTransition);
   })
   .catch(function(err) {
     this.events.onError(err);

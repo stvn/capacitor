@@ -49,7 +49,8 @@ describe('FSM', function() {
       onConflict: sinon.stub(),
       willTransition: sinon.stub(),
       didTransition: sinon.stub(),
-      didEvent: sinon.stub()
+      willEmit: sinon.stub(),
+      didEmit: sinon.stub()
     };
     fsm = new FSM(fsmEvents);
     state = makeState('initial');
@@ -57,6 +58,23 @@ describe('FSM', function() {
 
   it('should create a new instance via constructor', function() {
     assert.ok(fsm, 'should have an object');
+  })
+
+  describe('api functions are pre-bound to FSM instance', function() {
+    it('should bind #emit() to instance', function(done) {
+      event = 'emitsState';
+      var stateName = 'eventEventsState';
+      state[event] = sinon.stub().returns(stateName);
+      initFsm().then(function() {
+        var emit = fsm.emit; // if fsm.emit not already bind()-ed, will loose the `this` value
+        return emit(event)
+        .then(function() {
+          assert.ok(fsmEvents.onInvalid.called, 'should call onMissing');
+          assert.ok(fsmEvents.onInvalid.calledWith(stateName), 'should try but fail to transition to emitted state');
+        })
+      })
+      .then(done).catch(done)
+    })
   })
 
   describe('events', function() {
@@ -72,7 +90,7 @@ describe('FSM', function() {
         assert.notOk(fsmEvents.onError.called, 'should not call fsm#onError');
         assert.notOk(fsmEvents.willTransition.called, 'should not call fsm#willTransition');
         assert.notOk(fsmEvents.didTransition.called, 'should not call fsm#didTransition');
-        assert.notOk(fsmEvents.didEvent.called, 'should not call fsm#didEvent');
+        assert.notOk(fsmEvents.didEmit.called, 'should not call fsm#didEmit');
       })
       .then(done).catch(done)
     })
@@ -92,8 +110,8 @@ describe('FSM', function() {
           assert.notOk(fsmEvents.onError.called, 'should not call fsm#onError');
           assert.notOk(fsmEvents.willTransition.called, 'should not call fsm#willTransition');
           assert.notOk(fsmEvents.didTransition.called, 'should not call fsm#didTransition');
-          assert.ok(fsmEvents.didEvent.called, 'should call fsm#didEvent');
-          assert.ok(fsmEvents.didEvent.calledWith(event, params, false), 'should call fsm#didEvent w correct args');
+          assert.ok(fsmEvents.didEmit.called, 'should call fsm#didEmit');
+          assert.ok(fsmEvents.didEmit.calledWith(event, params), 'should call fsm#didEmit w correct args');
         })
       })
       .then(done).catch(done)
@@ -115,8 +133,8 @@ describe('FSM', function() {
           assert.notOk(fsmEvents.onError.called, 'should not call fsm#onError');
           assert.notOk(fsmEvents.willTransition.called, 'should not call fsm#willTransition');
           assert.notOk(fsmEvents.didTransition.called, 'should not call fsm#didTransition');
-          assert.ok(fsmEvents.didEvent.called, 'should call fsm#didEvent');
-          assert.ok(fsmEvents.didEvent.calledWith(event, params, false), 'should call fsm#didEvent w correct args');
+          assert.ok(fsmEvents.didEmit.called, 'should call fsm#didEmit');
+          assert.ok(fsmEvents.didEmit.calledWith(event, params), 'should call fsm#didEmit w correct args');
         })
       })
       .then(done).catch(done)
@@ -137,8 +155,8 @@ describe('FSM', function() {
           assert.notOk(fsmEvents.onError.called, 'should not call fsm#onError');
           assert.notOk(fsmEvents.willTransition.called, 'should not call fsm#willTransition');
           assert.notOk(fsmEvents.didTransition.called, 'should not call fsm#didTransition');
-          assert.ok(fsmEvents.didEvent.called, 'should call fsm#didEvent');
-          assert.ok(fsmEvents.didEvent.calledWith(event, params, false), 'should call fsm#didEvent w correct args');
+          assert.ok(fsmEvents.didEmit.called, 'should call fsm#didEmit');
+          assert.ok(fsmEvents.didEmit.calledWith(event, params), 'should call fsm#didEmit w correct args');
         })
       })
       .then(done).catch(done)
@@ -207,15 +225,18 @@ describe('FSM', function() {
           assert.ok(fsmEvents.willTransition.calledWith(state, newState), 'should call fsm#willTransition w correct args');
           assert.ok(fsmEvents.didTransition.called, 'should not call fsm#didTransition');
           assert.ok(fsmEvents.didTransition.calledWith(newState), 'should call fsm#didTransition w correct args');
-          assert.ok(fsmEvents.didEvent.called, 'should call fsm#didEvent');
-          assert.ok(fsmEvents.didEvent.calledWith(event, params, true), 'should call fsm#didEvent w correct args');
+          assert.ok(fsmEvents.willEmit.called, 'should call fsm#willEmit');
+          assert.ok(fsmEvents.willEmit.calledWith(event, params), 'should call fsm#willEmit w correct args');
+          assert.ok(fsmEvents.didEmit.called, 'should call fsm#didEmit');
+          assert.ok(fsmEvents.didEmit.calledWith(event, params), 'should call fsm#didEmit w correct args');
 
           // events should fire in order
-          assert.ok(state[event].calledBefore(fsmEvents.willTransition));
-          assert.ok(fsmEvents.willTransition.calledBefore(state.leave));
-          assert.ok(state.leave.calledBefore(newState.enter));
-          assert.ok(newState.enter.calledBefore(fsmEvents.didTransition));
-          assert.ok(fsmEvents.didTransition.calledBefore(fsmEvents.didEvent));
+          assert.ok(fsmEvents.willEmit.calledBefore(state[event]), 'willEmit > event');
+          assert.ok(state[event].calledBefore(fsmEvents.didEmit), ' event -> didEmit');
+          assert.ok(fsmEvents.didEmit.calledBefore(fsmEvents.willTransition), 'didEmit > willTransition');
+          assert.ok(fsmEvents.willTransition.calledBefore(state.leave), 'willTransition > leave');
+          assert.ok(state.leave.calledBefore(newState.enter), 'leave > enter');
+          assert.ok(newState.enter.calledBefore(fsmEvents.didTransition), 'enter > didTransition');
           assert.equal(fsm.current, newState, 'should be at new state');
         })
       })
