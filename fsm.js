@@ -17,7 +17,8 @@ var FSM = function(events, stateDefault) {
     onConflict: nop,
     willTransition: nop,
     didTransition: nop,
-    didEvent: nop
+    willEmit: nop,
+    didEmit: nop
   });
   this.stateDefault = _.defaults(stateDefault || {}, {
     leave: nop,
