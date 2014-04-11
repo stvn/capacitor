@@ -111,16 +111,22 @@ FSM.prototype.emit = function(eventName, params) {
   }.bind(this))
   .bind(this)
   .then(function(stateName) {
-    // callback that event occurred
-    this.events.didEmit(eventName, params);
+    var willTransition = true;
 
     // do nothing unless event handler returns a state name
     if (!stateName || stateName === this.current.name) {
-      return false;
-    }
-    // error if state name is unknown
-    if (!(stateName in this.states)) {
+      willTransition = false;
+    } else if (!(stateName in this.states)) {
+      // error if state name is unknown
       this.events.onInvalid(stateName);
+      willTransition = false;
+    }
+
+    // callback that event occurred
+    this.events.didEmit(eventName, params, willTransition);
+
+    // exit if not transitioning
+    if (!willTransition) {
       return false;
     }
 

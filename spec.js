@@ -111,7 +111,7 @@ describe('FSM', function() {
           assert.notOk(fsmEvents.willTransition.called, 'should not call fsm#willTransition');
           assert.notOk(fsmEvents.didTransition.called, 'should not call fsm#didTransition');
           assert.ok(fsmEvents.didEmit.called, 'should call fsm#didEmit');
-          assert.ok(fsmEvents.didEmit.calledWith(event, params), 'should call fsm#didEmit w correct args');
+          assert.ok(fsmEvents.didEmit.calledWith(event, params, false), 'should call fsm#didEmit w correct args');
         })
       })
       .then(done).catch(done)
@@ -134,7 +134,7 @@ describe('FSM', function() {
           assert.notOk(fsmEvents.willTransition.called, 'should not call fsm#willTransition');
           assert.notOk(fsmEvents.didTransition.called, 'should not call fsm#didTransition');
           assert.ok(fsmEvents.didEmit.called, 'should call fsm#didEmit');
-          assert.ok(fsmEvents.didEmit.calledWith(event, params), 'should call fsm#didEmit w correct args');
+          assert.ok(fsmEvents.didEmit.calledWith(event, params, false), 'should call fsm#didEmit w correct args');
         })
       })
       .then(done).catch(done)
@@ -156,7 +156,7 @@ describe('FSM', function() {
           assert.notOk(fsmEvents.willTransition.called, 'should not call fsm#willTransition');
           assert.notOk(fsmEvents.didTransition.called, 'should not call fsm#didTransition');
           assert.ok(fsmEvents.didEmit.called, 'should call fsm#didEmit');
-          assert.ok(fsmEvents.didEmit.calledWith(event, params), 'should call fsm#didEmit w correct args');
+          assert.ok(fsmEvents.didEmit.calledWith(event, params, false), 'should call fsm#didEmit w correct args');
         })
       })
       .then(done).catch(done)
@@ -228,7 +228,7 @@ describe('FSM', function() {
           assert.ok(fsmEvents.willEmit.called, 'should call fsm#willEmit');
           assert.ok(fsmEvents.willEmit.calledWith(event, params), 'should call fsm#willEmit w correct args');
           assert.ok(fsmEvents.didEmit.called, 'should call fsm#didEmit');
-          assert.ok(fsmEvents.didEmit.calledWith(event, params), 'should call fsm#didEmit w correct args');
+          assert.ok(fsmEvents.didEmit.calledWith(event, params, true), 'should call fsm#didEmit w correct args');
 
           // events should fire in order
           assert.ok(fsmEvents.willEmit.calledBefore(state[event]), 'willEmit > event');
