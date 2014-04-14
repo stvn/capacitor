@@ -18,6 +18,7 @@ var FSM = function(events, stateDefault) {
   this.events = _.defaults(events || {}, {
     onInvalid: nop,
     onError: nop,
+    onMissing: nop,
     onConflict: nop,
     willTransition: nop,
     didTransition: nop,
@@ -76,7 +77,10 @@ util.inherits(FSM.AlreadyInitializedError, Error);
 
 FSM.prototype._missing = function(eventName, params) {
   try {
-    this.current.onMissing(eventName, params);
+    if (this.current) {
+      this.current.onMissing(eventName, params);
+    }
+    this.events.onMissing(eventName, params);
   } catch (err) {
     this.events.onError(err);
   }
@@ -85,9 +89,8 @@ FSM.prototype._conflict = function(eventName, params) {
   try {
     if (this.current) {
       this.current.onConflict(eventName, params);
-    } else {
-      this.events.onConflict(eventName, params);
     }
+    this.events.onConflict(eventName, params);
   } catch (err) {
     this.events.onError(err);
   }
@@ -128,7 +131,19 @@ FSM.prototype.processQueue = function() {
   if (!this.current || this.queuePromise !== null) {
     return;
   }
-  event = this.eventQueue && this.eventQueue.shift();
+  while (this.eventQueue && this.eventQueue.length) {
+    event = this.eventQueue.shift();
+    if (!event) {
+      continue;
+    }
+    if (!event.name || typeof this.current[event.name] !== 'function') {
+      this._missing(event.name, event.params);
+      continue;
+    }
+    // found valid event
+    break;
+  }
+  // no valid events to handle
   if (!event) {
     return;
   }

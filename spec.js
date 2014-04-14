@@ -47,6 +47,7 @@ describe('FSM', function() {
       onInvalid: sinon.stub(),
       onError: sinon.stub(),
       onConflict: sinon.stub(),
+      onMissing: sinon.stub(),
       willTransition: sinon.stub(),
       didTransition: sinon.stub(),
       willEmit: sinon.stub(),
@@ -179,7 +180,8 @@ describe('FSM', function() {
         fsm.emit(event, params);
         assert.ok(fsm.isTransitioning());
         fsm.emit(event, params);
-        assert.notOk(fsmEvents.onConflict.called, 'should not call fsm#onConflict');
+        assert.ok(fsmEvents.onConflict.called, 'should call fsm#onConflict');
+        assert.ok(fsmEvents.onConflict.calledWith(event, params), 'should call fsm#onConflict');
         assert.notOk(fsmEvents.onError.called, 'should not call fsm#onError');
         assert.ok(state.onConflict.called, 'should call state#onConflict');
         assert.ok(state.onConflict.calledWith(event, params), 'call state#onConflict w correct args');
@@ -285,6 +287,30 @@ describe('FSM', function() {
       nextDefer.resolve();
     })
 
+    it('should process queued events even if one is missing', function(done) {
+      var missingEvent = 'missingEvent';
+      var realEvent = 'realEvent';
+      state[event] = sinon.stub().returns(false);
+      state[realEvent] = sinon.stub().returns(false);
+      initFsm().then(function() {
+        fsm.emit(event);
+        fsm.emit(missingEvent);
+        fsm.emit(event);
+
+        return Promise.delay(10)
+        .then(function() {
+          console.dir(fsmEvents.onMissing.args);
+          assert.ok(state.onConflict.called, 'called #onConflict');
+          assert.ok(fsmEvents.onConflict.called, 'called fsm#onConflict');
+          assert.ok(fsmEvents.onMissing.called, 'called fsm#onMissing');
+          assert.ok(fsmEvents.onMissing.calledWith(missingEvent), 'onMissing called with missingEvent')
+          assert.ok(state[event].calledTwice, 'main event called twice');
+
+        })
+      })
+      .then(done).catch(done)
+    })
+  
     it('should process queued events on different state after a transition', function(done) {
       var startEvent = 'firstEvent';
       var startDefer = Promise.defer();
@@ -357,7 +383,8 @@ describe('FSM', function() {
       fsm.define(state);
       fsm.initialize(state.name);
       fsm.emit(event, params);
-      assert.notOk(fsmEvents.onConflict.called, 'fsm#onConflict should not be called');
+      assert.ok(fsmEvents.onConflict.calledOnce, 'fsm#onConflict should be called');
+      assert.ok(fsmEvents.onConflict.calledWith(event, params), 'fsm#onConflict should be called');
       assert.ok(state.onConflict.calledOnce, 'state#onConflict should be called');
       assert.ok(state.onConflict.calledWith(event, params), 'state#onConflict should be called w correct args');
     })
