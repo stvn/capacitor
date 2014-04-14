@@ -10,7 +10,11 @@ var nop = function() {}; //no op
 var FSM = function(events, stateDefault) {
   this.current = null;
   this.states = {};
-  this.transitionPromise = null;
+  this.queuePromise = null;
+  this.eventQueue = [];
+  this.debug = false;
+
+  // event defaults
   this.events = _.defaults(events || {}, {
     onInvalid: nop,
     onError: nop,
@@ -20,6 +24,8 @@ var FSM = function(events, stateDefault) {
     willEmit: nop,
     didEmit: nop
   });
+
+  // state defaults 
   this.stateDefault = _.defaults(stateDefault || {}, {
     leave: nop,
     enter: nop,
@@ -96,17 +102,44 @@ FSM.prototype._conflict = function(eventName, params) {
  *  emit an event against the current state
  */
 FSM.prototype.emit = function(eventName, params) {
-  // handle transition in progress
-  if (!this.current || this.transitionPromise !== null) {
-    return this._conflict(eventName, params);
+  if (!eventName) {
+    return this._missing(eventName, params);
   }
-  // handle missing event name
+
+  // notify conflict but do not stop event processing
+  if (this.eventQueue.length || this.queuePromise !== null) {
+    this._conflict(eventName, params);
+  }
+
+  // queue the event
+  this.eventQueue.push({
+    name: eventName,
+    params: params
+  });
+
+  this.processQueue();
+}
+
+/*
+ *  Process the event queue. Does nothing if already processing.
+ */
+FSM.prototype.processQueue = function() {
+  var event, eventName, params;
+  if (!this.current || this.queuePromise !== null) {
+    return;
+  }
+  event = this.eventQueue && this.eventQueue.shift();
+  if (!event) {
+    return;
+  }
+  eventName = event.name;
+  params = event.params;
+
   if (!eventName || typeof this.current[eventName] !== 'function') {
     return this._missing(eventName, params);
   }
- 
-  // handle the event 
-  this.transitionPromise = new Promise(function(resolve) {
+
+  this.queuePromise = new Promise(function(resolve) {
     this.events.willEmit(eventName, params);
     resolve(this.current[eventName].call(this.current, params));
   }.bind(this))
@@ -153,11 +186,14 @@ FSM.prototype.emit = function(eventName, params) {
     this.events.onError(err);
   })
   .finally(function() {
+    var fsm = this;
     // reset that transition is complete
-    this.transitionPromise = null;
+    this.queuePromise = null;
+    return Promise.delay(1)
+    .then(function() {
+      fsm.processQueue();
+    })
   })
-
-  return this.transitionPromise;
 }
 
 /*
@@ -165,7 +201,7 @@ FSM.prototype.emit = function(eventName, params) {
  *  @return {boolean} true if transitioning, false otherwise
  */
 FSM.prototype.isTransitioning = function() {
-  return this.transitionPromise !== null;
+  return this.queuePromise !== null;
 }
 
 /*
@@ -178,6 +214,7 @@ FSM.prototype.define = function(definition) {
   if (typeof definition.name !== 'string' || !definition.name) {
     throw new FSM.InvalidStateError('State must have a .name');
   }
+  definition.fsm = this;
   this.states[definition.name] = _.defaults(definition, this.stateDefault);
 }
 
@@ -204,10 +241,15 @@ FSM.prototype.initialize = function(stateName) {
     this.events.didTransition(this.current);
   })
   .finally(function() {
-    this.transitionPromise = null;
+    var fsm = this;
+    this.queuePromise = null;
+    return Promise.delay(1)
+    .then(function() {
+      fsm.processQueue();
+    })
   })
 
-  this.transitionPromise = promise;
+  this.queuePromise = promise;
   return promise;
 }
 

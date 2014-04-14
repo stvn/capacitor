@@ -67,11 +67,20 @@ describe('FSM', function() {
       state[event] = sinon.stub().returns(stateName);
       initFsm().then(function() {
         var emit = fsm.emit; // if fsm.emit not already bind()-ed, will loose the `this` value
-        return emit(event)
-        .then(function() {
-          assert.ok(fsmEvents.onInvalid.called, 'should call onMissing');
+        emit(event)
+        return fsm.queuePromise.then(function() {
+          assert.ok(fsmEvents.onInvalid.called, 'should call onInvalid');
           assert.ok(fsmEvents.onInvalid.calledWith(stateName), 'should try but fail to transition to emitted state');
         })
+      })
+      .then(done).catch(done)
+    })
+  })
+
+  describe('state functions', function() {
+    it('should attach a reference to the state machine to each defined state', function(done) {
+      initFsm().then(function() {
+        assert.equal(state.fsm, fsm, 'state should have .fsm reference to state machine')
       })
       .then(done).catch(done)
     })
@@ -99,8 +108,8 @@ describe('FSM', function() {
       event = 'knownEvent';
       state[event] = sinon.spy();
       initFsm().then(function() {
-        return fsm.emit(event, params)
-        .then(function() {
+        fsm.emit(event, params)
+        return fsm.queuePromise.then(function() {
           assert.notOk(state.onMissing.called, 'state#onMissing should not be called');
           assert.ok(state[event].called, 'event handler should be called');
           assert.ok(state[event].calledWith(params), 'event handler should be called w params');
@@ -121,8 +130,8 @@ describe('FSM', function() {
       event = 'notTransitionSameName';
       state[event] = sinon.stub().returns('invalid');
       initFsm().then(function() {
-        return fsm.emit(event, params)
-        .then(function() {
+        fsm.emit(event, params)
+        return fsm.queuePromise.then(function() {
           assert.notOk(state.onMissing.called, 'state#onMissing should not be called');
           assert.ok(state[event].called, 'event handler should be called');
           assert.ok(state[event].calledWith(params), 'event handler should be called w params');
@@ -144,8 +153,8 @@ describe('FSM', function() {
       event = 'notTransitionSameName';
       state[event] = sinon.stub().returns(state.name);
       initFsm().then(function() {
-        return fsm.emit(event, params)
-        .then(function() {
+        fsm.emit(event, params)
+        return fsm.queuePromise.then(function() {
           assert.notOk(state.onMissing.called, 'state#onMissing should not be called');
           assert.ok(state[event].called, 'event handler should be called');
           assert.ok(state[event].calledWith(params), 'event handler should be called w params');
@@ -163,12 +172,13 @@ describe('FSM', function() {
     })
 
     it('should call fsm#onConflict when event already processing', function(done) {
+      var defer = Promise.defer();
       event = 'eventInProgress';
-      state[event] = sinon.stub().returns('otherState');
+      state[event] = sinon.stub().returns(defer.promise);
       initFsm().then(function() {
-        fsm.emit(event, params)
+        fsm.emit(event, params);
         assert.ok(fsm.isTransitioning());
-        fsm.emit(event, params)
+        fsm.emit(event, params);
         assert.notOk(fsmEvents.onConflict.called, 'should not call fsm#onConflict');
         assert.notOk(fsmEvents.onError.called, 'should not call fsm#onError');
         assert.ok(state.onConflict.called, 'should call state#onConflict');
@@ -206,8 +216,8 @@ describe('FSM', function() {
       fsm.define(newState);
       state[event] = sinon.stub().returns(newState.name);
       initFsm().then(function() {
-        return fsm.emit(event, params)
-        .then(function() {
+        fsm.emit(event, params)
+        return fsm.queuePromise.then(function() {
           // state-specific enter/leave should be called
           assert.notOk(state.onMissing.called, 'state#onMissing should not be called');
           assert.ok(state[event].called, 'event handler should be called');
@@ -244,6 +254,72 @@ describe('FSM', function() {
       state._leave.resolve();
       newState._enter.resolve();
     })
+
+    it('should process queued events on same state when no transition', function(done) {
+      var startEvent = 'firstEvent';
+      var startDefer = Promise.defer();
+      var nextEvent = 'nextEvent';
+      var nextDefer = Promise.defer();
+      state[startEvent] = sinon.stub().returns(startDefer.promise);
+      state[nextEvent] = sinon.stub().returns(nextDefer.promise);
+
+      var newState = makeState('newState');
+      newState[startEvent] = sinon.stub().returns(startDefer.promise);
+      newState[nextEvent] = sinon.stub().returns(nextDefer.promise);
+      fsm.define(newState);
+
+      initFsm().then(function() {
+        fsm.emit(startEvent);
+        fsm.emit(nextEvent);
+
+        assert.ok(state[startEvent].called, 'first event called on first state');
+        assert.notOk(state[nextEvent].called, 'next event not yet called on first state');
+
+        return Promise.delay(10)
+        .then(function() {
+          assert.ok(state[nextEvent].called, 'next event called on first state');
+        })
+      }) 
+      .then(done).catch(done);
+      startDefer.resolve();
+      nextDefer.resolve();
+    })
+
+    it('should process queued events on different state after a transition', function(done) {
+      var startEvent = 'firstEvent';
+      var startDefer = Promise.defer();
+      var nextEvent = 'nextEvent';
+      var nextDefer = Promise.defer();
+      state[startEvent] = sinon.stub().returns(startDefer.promise);
+      state[nextEvent] = sinon.stub().returns(nextDefer.promise);
+
+      var newState = makeState('newState');
+      newState[startEvent] = sinon.stub().returns(startDefer.promise);
+      newState[nextEvent] = sinon.stub().returns(nextDefer.promise);
+      fsm.define(newState);
+
+      initFsm().then(function() {
+        fsm.emit(startEvent);
+        fsm.emit(nextEvent);
+
+        assert.ok(state[startEvent].called, 'first event called on first state');
+        assert.notOk(state[nextEvent].called, 'next event never called on first state');
+        assert.notOk(newState[startEvent].called, 'first event never called on second state');
+        assert.notOk(newState[nextEvent].called, 'next event not yet called on second state');
+
+        return Promise.delay(10)
+        .then(function() {
+          assert.notOk(state[nextEvent].called, 'next event never called on first state');
+          assert.notOk(newState[startEvent].called, 'first event never called on second state');
+          assert.ok(newState[nextEvent].called, 'next event called on second state');
+        })
+      }) 
+      .then(done).catch(done);
+      startDefer.resolve(newState.name);
+      nextDefer.resolve();
+      state._leave.resolve();
+      newState._enter.resolve();
+    });
   })
 
   describe('initialization', function() {
@@ -252,6 +328,11 @@ describe('FSM', function() {
     })
 
     it('should not throw an error if event emitted before initialized', function() {
+      try {
+        fsm.emit('event');
+      } catch (e) {
+        console.error(e);
+      }
       assert.doesNotThrow(fsm.emit.bind(fsm, 'event'), Error);
     })
 
@@ -261,11 +342,15 @@ describe('FSM', function() {
       assert.throws(fsm.initialize.bind(fsm, 'initial'), FSM.AlreadyInitializedError);
     })
 
-    it('should call fsm#onConflict if event emitted before initialized', function() {
+    it('should queue events emitted before initialized', function() {
       fsm.define(state);
       fsm.emit(event, params);
-      assert(fsmEvents.onConflict.calledOnce, 'fsm onConflict should be called');
-      assert(fsmEvents.onConflict.calledWith(event, params), 'fsm onConflict should be called with correct args');
+      assert.notOk(fsm.isTransitioning(), 'should not be transitioning yet');
+      fsm.initialize(state.name)
+      .then(function() {
+        assert.ok(fsm.isTransitioning(), 'should now be processing queue');
+        assert.ok(state[event].called, 'should call event');
+      })
     })
 
     it('should call state#onConflict if event emitted during initialization', function() {
