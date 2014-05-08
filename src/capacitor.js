@@ -1,16 +1,16 @@
 var Promise = require('bluebird'),
     util = require('util'),
     EventEmitter = require('events').EventEmitter,
+    Current = require('./current'),
     CapacitorApiError = require('./capacitor_api_error');
 
 /**
  * Capacitor
- *
- * 
  */
 var Capacitor = function() {
   this.plugins = {};
   this.states = {};
+  this.current = null;
   EventEmitter.call(this);
 };
 
@@ -68,26 +68,31 @@ Capacitor.prototype.state = function(state) {
 /**
  * run()
  * @param  {String} eventName name of the event to process
- * @param  {Object|Array|literal} eventData event value. if you need more than one param, wrap them.
+ * @param  {Object|Array|literal} eventData event value. if you have multiple params, wrap them.
  * @return {None}           no return value
  *
  * Runs an event in the system - determines the current state and sends the event to the handler
  * defined there. if the state does not accept the event, emits `Capacitor.events.UNDEFINED_EVENT`.
  *
  * Event sequence:
- *   emit `WILL_RUN`
- *   if no handler: emit `UNDEFINED_EVENT`
- *   if handler: (runs event)
- *   emit `DID_RUN`
+ * - emit `WILL_RUN`
+ * - if no handler: emit `UNDEFINED_EVENT`
+ * - if handler: (runs event)
+ * - emit `DID_RUN`
  *   
- *  If an error occurrs at any point in the above, `ERROR` is thrown
+ * If an error occurrs at any point in the above, `ERROR` is emitted. 
  */
 Capacitor.prototype.run = function(eventName, eventData) {
+  var flux;
   if (typeof eventName !== 'string' || !eventName) {
     this.emit(Capacitor.events.INVALID_RUN, eventName, eventData);
     return;
   }
+  current = new Current(eventName, eventData);
   this.emit(Capacitor.events.WILL_RUN, eventName, eventData);
+
+
+
   this.emit(Capacitor.events.DID_RUN, eventName, eventData);
 };
 
