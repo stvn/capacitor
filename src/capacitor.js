@@ -3,6 +3,11 @@ var Promise = require('bluebird'),
     EventEmitter = require('events').EventEmitter,
     CapacitorApiError = require('./capacitor_api_error');
 
+/**
+ * Capacitor
+ *
+ * 
+ */
 var Capacitor = function() {
   this.plugins = {};
   this.states = {};
@@ -33,6 +38,9 @@ Capacitor.prototype.constructor = Capacitor;
  * @param  {String}   name name of the plugin
  * @param  {Function} fn   function defining the plugin
  * @return {None}        no return value
+ *
+ * Defines a plugin that will then be accessible within event handlers
+ * via `this.name()` where name is the defined name.
  */
 Capacitor.prototype.plugin = function(name, fn) {
   if (!name || typeof fn !== 'function' || fn.length !== 2) {
@@ -45,6 +53,10 @@ Capacitor.prototype.plugin = function(name, fn) {
  * state()
  * @param  {Object} state state definition
  * @return {None}       no return value
+ *
+ * Defines a state, which is a set of event handlers that may be active at any given time.
+ * Using `this.transition('nextState')` a handler can cause the Capacitor to 
+ * change form the current state to a new state (eg the stat with `name === 'nextState'`)
  */
 Capacitor.prototype.state = function(state) {
   if (typeof state.name !== 'string' || !state.name) {
