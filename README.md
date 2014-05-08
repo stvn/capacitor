@@ -1,101 +1,64 @@
-fsmp
-====
+capacitor
+=========
 
-Promise-based asynchronous Finite State Machine for node/browserify
+Reactive event system - like MVC, but pluggable, powerful, and asynchronous.
 
-## Install
-TODO: not yet published to npm.
+Inspired by Facebook's talk ["Hacker Way: Rethinking Web App Development at Facebook"](https://www.youtube.com/watch?v=nYkdrAPrdcw&feature=youtu.be). Works well with [React](http://facebook.github.io/react/) but not tied to it.
 
-    # npm install fsmp
-    
-## Development Guide
+# Example
 
-    # install dependencies
-    npm install
-    # run unit tests
-    npm test
+```javascript
+var flux = getFluxCapacitor();
 
-## Usage
+flux.state({
+  name: 'loginState',
+  login: function() {
+    return this
+      .log() // log all submitted form data
+      .queueIfProcessing() // queue any new events if already processing the event
+      .post('/login/action')  // post the data to a url
+      .map(function(response) { // convert the data to an output
+        if (response.success) {
+          this.transition('homePage') // if login successful, data converts to a transition
+        } else {
+          return this.render(LoginFailedPage, { // if login failed, data converts to rendering a failure message
+            message: 'Please check your email/password.'
+          });
+        }
+      })
+  }
+})
 
-### Constructor
+```
 
-    var FSM = require('fsm');
-    var fsm = new FSM();
 
-### Define States
+# Usage
 
-Use `#define()` to create a state.
+```javascript
+var Capacitor = require('capacitor');
+var flux = new Capacitor();
 
-    fsm.define({
-      name: 'stateName',
-      enter: function() {}, // callback when entering the state
-      leave: function() {}, // callback before leaving the state
-      onConflict: function(eventName, params) {}, // callback when event occurs before previous event finishes
-      onMissing: function(eventName, params) {}, // callback when event name is not defined on this state
-      eventName: function() { ... }
-    })
-    
-Use `#initialize()` to start the fsm in its initial state. This will call the state's `enter()` callback.
+// add a `log` capacitor: makes `this.log()` work within event handlers
+flux.capacitor('log', function(data, next) {
+  // TODO: what is the `this` context?
+  // TODO: how would you implement `debounce()`?
+  console.log(data);
+  next(null, data);
+});
 
-    fsm.define({name:'start', ...})
-    fsm.initialize('start')
-    
-Use `#emit()` to emit an event on the current state:
+// add a state
+flux.state({
+  name: 'hello',
+  sampleEvent: function(data) {
 
-    fsm.emit('eventName', {...params...})
-    
-## Example
+    // uses the capacitor defined with`flux.capacitor('log')`
+    return this.log(data);
+  }
+});
 
-Event handlers can return a falsy value to do nothing (eg side-effects only). If a string is returned, the FSM will transition to the state with that name.
+// emit an event into the system
+flux.emit('sampleEvent', {
+  name: 'Flux Capacitor'
+});
+```
 
-    var fsm = new FSM();
-    fsm.define({
-      name: 'ping',
-      noResult: function() {}, // this event returns nothing, so will not transition
-      ping: function() {
-        return 'pong'; // this event returns a string, and will transition to 'pong' state
-      }
-    })
-    fsm.define({
-      name: 'pong',
-      pong: function() {
-        return 'ping'; // transitions back to 'ping' state
-      }
-    })
-    fsm.initialize('ping'); // initialize into the 'ping' state which accepts 'ping' events
-    fsm.emit('ping'); // run the 'ping' event on current state
-    // => now in the 'pong' state
-    fsm.emit('pong') // run the 'pong' event on current state
-    // => now in the 'ping' state
-    fsm.emit('pong') // does nothing: 'ping' state has no 'pong' event
-    
-## Asynchronous Example
-
-Event handler functions can return a promise which resolves to a state name: in this case the FSM will be in a transitioning state until the current event completes. Subsequent events during processing will cause the state's `onConflict` handler to be called.
-
-    var Promise = require('bluebird');
-    var fsm = new FSM();
-    fsm.define({
-      name: 'ping',
-      ping: function() {
-        return new Promise(function(resolve) {
-          setTimeout(resolve.bind(this, 'pong'), 1000);
-        })
-      }
-    })
-    fsm.define({
-      name: 'pong',
-      pong: function() {
-        return new Promise(function(resolve) {
-          setTimeout(resolve.bind(this, 'ping'), 1000);
-        })
-      }
-    })
-    fsm.initialize('ping'); // initialize into the 'ping' state which accepts 'ping' events
-    fsm.emit('ping'); // run the 'ping' event on current state
-    // no immediate transition...
-    // => 1000ms later, now in the 'pong' state
-    fsm.emit('pong') // run the 'pong' event on current state
-    // no immediate transition...
-    // => 1000ms later, now in the 'ping' state
-    fsm.emit('pong') // does nothing: 'ping' state has no 'pong' event

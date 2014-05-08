@@ -1,11 +1,11 @@
 {
-  "name": "fsmp",
+  "name": "capacitor",
   "version": "0.3.1",
-  "description": "Promise-based asynchronous Finite State Machine for node/browserify ",
-  "main": "fsm.js",
+  "description": "Reactive event system - like MVC, but pluggable, powerful, and asynchronous.",
+  "main": "src/capacitor.js",
   "scripts": {
-    "test": "mocha --reporter spec spec.js",
-    "start": "mocha --reporeter min --watch spec.js"
+    "test": "mocha --reporter spec 'test/**/*.js'",
+    "start": "mocha --reporeter min --watch 'test/**/*.js'"
   },
   "repository": {
     "type": "git",
