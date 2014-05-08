@@ -14,10 +14,10 @@ flux.state({
   name: 'loginState',
   login: function() {
     return this
-      .log() // log all submitted form data
-      .queueIfProcessing() // queue any new events if already processing the event
-      .post('/login/action')  // post the data to a url
-      .map(function(response) { // convert the data to an output
+      .pipe(log()) // log all submitted form data
+      .pipe(queueIfProcessing()) // queue any new events if already processing the event
+      .pipe(post('/login/action'))  // post the data to a url
+      .pipe(map(function(response) { // convert the data to an output
         if (response.success) {
           this.transition('homePage') // if login successful, data converts to a transition
         } else {
@@ -25,7 +25,7 @@ flux.state({
             message: 'Please check your email/password.'
           });
         }
-      })
+      }))
   }
 })
 
@@ -49,10 +49,9 @@ flux.capacitor('log', function(data, next) {
 // add a state
 flux.state({
   name: 'hello',
-  sampleEvent: function(data) {
-
+  sampleEvent: function() {
     // uses the capacitor defined with`flux.capacitor('log')`
-    return this.log(data);
+    return this.pipe(log());
   }
 });
 

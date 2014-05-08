@@ -1,8 +1,9 @@
 var Promise = require('bluebird'),
     util = require('util'),
     EventEmitter = require('events').EventEmitter,
-    through = require('through'),
     Current = require('./current'),
+    terminal = require('./terminal'),
+    capacitorStream = require('./capacitor_stream'),
     CapacitorApiError = require('./capacitor_api_error');
 
 /**
@@ -12,6 +13,7 @@ var Capacitor = function() {
   this.plugins = {};
   this.states = {};
   this.current = null;
+  this.terminal = terminal(this, Capacitor.events.DID_RUN);
   EventEmitter.call(this);
 };
 
@@ -120,28 +122,16 @@ Capacitor.prototype.run = function(eventName, eventData) {
   }
   this.emit(Capacitor.events.WILL_RUN, current);
 
-  if (typeof this.current[eventName] !== 'function') {
+  if (!(eventName in this.current)) {
     this.emit(Capacitor.events.UNDEFINED_HANDLER_ERROR, current);
     return;
   }
 
-  // create a stream to pipe events into
-  stream = through();
-
-  // pipe the current into the event handler
-  this.current[eventName].call(stream);
+  // get the stream for this event
+  stream = capacitorStream(this.current, eventName, this.terminal);
 
   // write the current to the stream
   stream.write(current);
-  // currently doing one event per stream instantiation
-  stream.end();
-  // catch errors
-  stream.on('error', function(err) {
-    this.emit(Capacitor.events.ERROR, this.current, current);
-  }.bind(this));
-
-  // cleanup: this should be the destination pipe of all streams.
-  this.emit(Capacitor.events.DID_RUN, eventName, eventData);
 };
 
 module.exports = Capacitor;
