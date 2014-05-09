@@ -1,6 +1,6 @@
 {
   "name": "capacitor",
-  "version": "0.3.1",
+  "version": "0.4.1",
   "description": "Reactive event system - like MVC, but pluggable, powerful, and asynchronous.",
   "main": "index.js",
   "scripts": {
@@ -9,25 +9,24 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/josephsavona/fsmp.git"
+    "url": "https://github.com/josephsavona/capacitor.git"
   },
   "keywords": [
-    "state",
-    "machine",
-    "fsm",
-    "finite",
-    "state",
-    "machine",
-    "state",
-    "node",
-    "browserify"
+    "mvc",
+    "event stream",
+    "event",
+    "stream",
+    "react",
+    "state machine",
+    "node-stream",
+    "pipe"
   ],
   "author": "Joseph Savona <joe@josephsavona.com>",
   "license": "MIT License",
   "bugs": {
-    "url": "https://github.com/josephsavona/fsmp/issues"
+    "url": "https://github.com/josephsavona/capacitor/issues"
   },
-  "homepage": "https://github.com/josephsavona/fsmp",
+  "homepage": "https://github.com/josephsavona/capacitor",
   "devDependencies": {
     "chai": "^1.9.1",
     "jquery": "^2.1.1",
