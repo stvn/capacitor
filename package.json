@@ -1,40 +1,46 @@
 {
   "name": "capacitor",
-  "version": "0.4.0",
-  "description": "Promise-based asynchronous Finite State Machine for node/browserify ",
-  "main": "fsm.js",
+  "version": "0.4.2",
+  "description": "Reactive event system - like MVC, but pluggable, powerful, and asynchronous.",
+  "main": "index.js",
   "scripts": {
-    "test": "mocha --reporter spec spec.js",
-    "start": "mocha --reporeter min --watch spec.js"
+    "test": "mocha --reporter spec 'test/init.js' 'test/**/*.js'",
+    "start": "mocha --reporter min --watch 'test/init.js' 'test/**/*.js'"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/josephsavona/fsmp.git"
+    "url": "https://github.com/josephsavona/capacitor.git"
   },
   "keywords": [
-    "state",
-    "machine",
-    "fsm",
-    "finite",
-    "state",
-    "machine",
-    "state",
-    "node",
-    "browserify"
+    "mvc",
+    "event stream",
+    "event",
+    "stream",
+    "react",
+    "state machine",
+    "node-stream",
+    "pipe"
   ],
   "author": "Joseph Savona <joe@josephsavona.com>",
   "license": "MIT License",
   "bugs": {
-    "url": "https://github.com/josephsavona/fsmp/issues"
+    "url": "https://github.com/josephsavona/capacitor/issues"
   },
-  "homepage": "https://github.com/josephsavona/fsmp",
+  "homepage": "https://github.com/josephsavona/capacitor",
   "devDependencies": {
     "chai": "^1.9.1",
-    "sinon": "^1.9.1",
-    "mocha": "^1.18.2"
+    "jquery": "^2.1.1",
+    "jsdom": "^0.10.5",
+    "mocha": "^1.18.2",
+    "sinon": "^1.9.1"
   },
   "dependencies": {
     "bluebird": "^1.2.1",
-    "lodash": "^2.4.1"
+    "envify": "^1.2.1",
+    "lodash": "^2.4.1",
+    "react": "^0.10.0",
+    "react-addons": "^0.9.0",
+    "through": "^2.3.4",
+    "through2": "^0.4.1"
   }
 }
