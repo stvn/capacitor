@@ -1,5 +1,5 @@
 {
-  "name": "fsmp",
+  "name": "capacitor",
   "version": "0.3.1",
   "description": "Promise-based asynchronous Finite State Machine for node/browserify ",
   "main": "fsm.js",
