@@ -1,6 +1,6 @@
 {
   "name": "capacitor",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Reactive event system - like MVC, but pluggable, powerful, and asynchronous.",
   "main": "index.js",
   "scripts": {
