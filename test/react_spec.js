@@ -32,8 +32,12 @@ describe('Capacitor.react transform', function() {
   it('should render components based on input current', function(done) {
     var message = 'hello world';
     flux.run('testEvent', {message: message});
-    flux.on(Capacitor.events.ERROR, done);
+    flux.on(Capacitor.events.ERROR, function(err) {
+      console.error(err);
+      assert.notOk(err, 'should not have error')
+    });
     flux.on(Capacitor.events.DID_RUN, function() {
+      assert.equal($('#react').text().trim(), message);
       done();
     });
   });
