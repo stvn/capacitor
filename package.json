@@ -2,10 +2,10 @@
   "name": "capacitor",
   "version": "0.3.1",
   "description": "Reactive event system - like MVC, but pluggable, powerful, and asynchronous.",
-  "main": "src/capacitor.js",
+  "main": "index.js",
   "scripts": {
-    "test": "mocha --reporter spec 'test/**/*.js'",
-    "start": "mocha --reporeter min --watch 'test/**/*.js'"
+    "test": "mocha --reporter spec 'test/init.js' 'test/**/*.js'",
+    "start": "mocha --reporter min --watch 'test/init.js' 'test/**/*.js'"
   },
   "repository": {
     "type": "git",
@@ -30,12 +30,17 @@
   "homepage": "https://github.com/josephsavona/fsmp",
   "devDependencies": {
     "chai": "^1.9.1",
-    "sinon": "^1.9.1",
-    "mocha": "^1.18.2"
+    "jquery": "^2.1.1",
+    "jsdom": "^0.10.5",
+    "mocha": "^1.18.2",
+    "sinon": "^1.9.1"
   },
   "dependencies": {
     "bluebird": "^1.2.1",
+    "envify": "^1.2.1",
     "lodash": "^2.4.1",
+    "react": "^0.10.0",
+    "react-addons": "^0.9.0",
     "through": "^2.3.4",
     "through2": "^0.4.1"
   }

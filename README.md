@@ -12,22 +12,26 @@ var flux = getFluxCapacitor();
 
 flux.state({
   name: 'loginState',
+
+  /*
+   * accepts currents of form:
+      {
+        name: 'login',
+        data: {
+          email: 'someone@example.com',
+          password: 'abcdefgh'
+        }
+      }
+  */
   login: function() {
     return this
       .pipe(log()) // log all submitted form data
       .pipe(queueIfProcessing()) // queue any new events if already processing the event
-      .pipe(post('/login/action'))  // post the data to a url
-      .pipe(map(function(response) { // convert the data to an output
-        if (response.success) {
-          this.transition('homePage') // if login successful, data converts to a transition
-        } else {
-          return this.render(LoginFailedPage, { // if login failed, data converts to rendering a failure message
-            message: 'Please check your email/password.'
-          });
-        }
-      }))
+      .pipe(httpPost('/login/action'))  // post the data to a url
+      .pipe(ifif(function(current) { return current.data.success }, transition('homePage')))
+      .pipe(render(LoginFailedPage))
   }
-})
+});
 
 ```
 

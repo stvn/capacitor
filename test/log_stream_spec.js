@@ -10,7 +10,7 @@ describe('Capacitor core API', function() {
 
   beforeEach(function() {
     flux = new Capacitor();
-    logger = sinon.spy(console.log.bind(console));
+    logger = sinon.spy();
     log = function() {
       return through.obj(function(current, enc, callback) {
         logger(current.name);
@@ -34,7 +34,5 @@ describe('Capacitor core API', function() {
     assert.ok(logger.calledTwice, 'should call state.log()');
     assert.equal(logger.args[0][0], 'log');
     assert.equal(logger.args[1][0], 'message');
-
-    flux.run('log', 'hello steve');
   });
 });

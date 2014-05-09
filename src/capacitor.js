@@ -112,6 +112,7 @@ Capacitor.prototype.initialize = function(stateName) {
 Capacitor.prototype.run = function(eventName, eventData) {
   var flux, stream;
   current = new Current(eventName, eventData);
+  
   if (!this.current) {
     this.emit(Capacitor.events.UNINITALIZED_ERROR, current);
     return;
@@ -120,18 +121,22 @@ Capacitor.prototype.run = function(eventName, eventData) {
     this.emit(Capacitor.events.INVALID_RUN, eventName, eventData);
     return;
   }
-  this.emit(Capacitor.events.WILL_RUN, current);
-
   if (!(eventName in this.current)) {
     this.emit(Capacitor.events.UNDEFINED_HANDLER_ERROR, current);
     return;
   }
 
-  // get the stream for this event
-  stream = capacitorStream(this.current, eventName, this.terminal);
+  try {
+    this.emit(Capacitor.events.WILL_RUN, current);
 
-  // write the current to the stream
-  stream.write(current);
+    // get the stream for this event
+    stream = capacitorStream(this.current, eventName, this.terminal);
+
+    // write the current to the stream
+    stream.write(current);
+  } catch (err) {
+    this.emit(Capacitor.events.ERROR, err, current);
+  }
 };
 
 module.exports = Capacitor;
